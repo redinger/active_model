@@ -29,6 +29,25 @@ class ActiveModel
       self
     end
 
+    def self_and_descendents_from_active_record#nodoc:
+      klass = self
+      classes = [klass]
+      while klass != klass.base_class  
+        classes << klass = klass.superclass
+      end
+      classes
+    rescue
+      [self]
+    end
+
+    def human_name(options = {})
+      defaults = self_and_descendents_from_active_record.map do |klass|
+        :"#{klass.name.underscore}"
+      end 
+      defaults << self.name.humanize
+      I18n.translate(defaults.shift, {:scope => [:activerecord, :models], :count => 1, :default => defaults}.merge(options))
+    end
+
   end
   
   def initialize(attributes={})
